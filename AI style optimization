@@ -1,0 +1,57 @@
+import openai
+from transformers import pipeline
+import random
+
+# 设置 OpenAI API 密钥
+openai.api_key = "your-api-key-here"  # 
+
+# 加载情感分析管道
+classifier = pipeline('sentiment-analysis')
+
+# 情感分析后的回复风格
+def adjust_response_for_emotion(emotion, raw_response):
+    """根据情感状态调整 AI 回复风格"""
+    if emotion == 'positive':
+        return f"🎉 太棒了！{raw_response}，我们可以一起继续努力！"
+    elif emotion == 'negative':
+        return f"😞 我明白你的感受，{raw_response}。让我们一起寻找解决方案吧。"
+    elif emotion == 'neutral':
+        return f"{raw_response}。让我们继续讨论，看看接下来能做什么。"
+    else:
+        return raw_response
+
+# 用 GPT 生成一个回复
+def generate_ai_response(prompt):
+    """生成 AI 回复"""
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "你是一个富有同理心、艺术感的AI助手，专注于理解并回应用户的情感需求。"},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.8,
+        max_tokens=150
+    )
+    return response['choices'][0]['message']['content']
+
+# 获取用户输入并分析情感
+def interact_with_user(user_input):
+    """根据用户输入与 AI 进行交互，并根据情感调整 AI 回复"""
+    
+    # 进行情感分析
+    sentiment = classifier(user_input)[0]
+    emotion = sentiment['label'].lower()  # 获取情感标签（positive/negative/neutral）
+    
+    # 使用 GPT 生成 AI 回复
+    ai_response = generate_ai_response(user_input)
+    
+    # 根据情感状态调整 AI 回复的语气和风格
+    adjusted_response = adjust_response_for_emotion(emotion, ai_response)
+    
+    return adjusted_response
+
+# 模拟用户交互
+if __name__ == "__main__":
+    user_input = input("请输入您的问题或感受：\n> ")
+    ai_output = interact_with_user(user_input)
+    print("\nAI 回复：", ai_output)
