@@ -1,0 +1,60 @@
+import openai
+import random
+
+# 你的 OpenAI API Key
+openai.api_key = "your-api-key-here"  # <-- 替换成你自己的 key
+
+# === 风格调优模块 ===
+
+RHETORIC_DEVICES = [
+    lambda text: f"仿佛梦境一般，{text}",
+    lambda text: f"{text}，正如春水初融，温柔又坚韧。",
+    lambda text: f"{text}？不，这是一场灵魂的低语。"
+]
+
+NARRATIVE_PATTERNS = [
+    lambda text: f"起初，{text}。然后，一切逐渐展开。",
+    lambda text: f"{text}——那是故事的第一章。",
+    lambda text: f"就像命运悄然铺陈，{text}"
+]
+
+EMOTIONAL_MODULATION = {
+    "warm": lambda text: f"{text} 感觉像阳光洒在肩头，暖暖的。",
+    "sad": lambda text: f"{text}，但心中却泛起了隐隐的忧伤。",
+    "neutral": lambda text: f"{text}，如此平静，如水面无波。"
+}
+
+def refine_text(input_text, emotion="warm", use_rhetoric=True, use_narrative=True):
+    output = input_text.strip()
+    if use_narrative:
+        output = random.choice(NARRATIVE_PATTERNS)(output)
+    if use_rhetoric:
+        output = random.choice(RHETORIC_DEVICES)(output)
+    if emotion in EMOTIONAL_MODULATION:
+        output = EMOTIONAL_MODULATION[emotion](output)
+    return output
+
+# === GPT 原始输出函数 ===
+
+def generate_text(prompt, model="gpt-3.5-turbo"):
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "你是一位温柔而富有诗意的叙述者。"},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7
+    )
+    return response['choices'][0]['message']['content']
+
+# === 主流程 ===
+
+if __name__ == "__main__":
+    user_prompt = input("请输入你想让 AI 描述的内容：\n> ")
+    
+    print("\n📤 GPT 正在生成原始文本...")
+    raw_output = generate_text(user_prompt)
+    print("\n📝 原始输出：\n", raw_output)
+
+    refined = refine_text(raw_output, emotion="warm")
+    print("\n🎨 风格优化后输出：\n", refined)
